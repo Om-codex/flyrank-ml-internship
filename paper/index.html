@@ -1,14 +1,1945 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Search Visibility Decline | FlyRank ML Capstone</title><link rel="stylesheet" href="styles.css"></head><body>
-<header><div class="nav"><a class="brand" href="#top">SEARCH INTELLIGENCE / CAPSTONE</a><nav><a href="#abstract">Abstract</a><a href="#methodology">Methodology</a><a href="#results">Results</a><a href="#recommendations">Recommendations</a><a href="#reproducibility">Reproducibility</a></nav></div></header>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta
+    name="description"
+    content="Google Search Ranking & Discoverability Capstone — prioritizing content pages for search-visibility decline review using historical search signals, client-grouped validation, and ranked recommendations."
+  >
+
+  <title>
+    Search Visibility Decline | FlyRank ML Capstone
+  </title>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+
+<body>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="site-header">
+
+  <div class="nav-wrap">
+
+    <a class="brand" href="#top">
+      SEARCH INTELLIGENCE
+      <span>/ CAPSTONE</span>
+    </a>
+
+    <nav>
+      <a href="#abstract">Abstract</a>
+      <a href="#data">Data</a>
+      <a href="#methodology">Methodology</a>
+      <a href="#results">Results</a>
+      <a href="#limitations">Limitations</a>
+      <a href="#recommendations">Recommendations</a>
+      <a href="#reproducibility">Reproducibility</a>
+    </nav>
+
+  </div>
+
+</header>
+
+
 <main id="top">
-<section class="hero"><div class="eyebrow">FLYRANK ML INTERNSHIP · MACHINE LEARNING CAPSTONE</div><h1>Prioritizing Content Pages at Risk of Search-Visibility Decline</h1><p class="hero-sub">A leakage-controlled ranking approach for deciding which pages a human reviewer should inspect first.</p><div class="chips"><span>Refresh / Content Opportunity Scoring</span><span>90-day historical features</span><span>30-day future outcome</span></div></section>
-<section id="abstract"><div class="kicker">01 · ABSTRACT</div><h2>From noisy search data to a review queue</h2><div class="cols"><p class="lead">This project asks which content pages should be prioritized for human review when the goal is to identify pages that subsequently experience a defined decline in search visibility. A 90-day historical feature window was constructed from March 3 through May 31, 2026, and a future June outcome window was used to define an operational decline label from Google Search Console impressions. Logistic Regression was evaluated with five-fold client-grouped cross-validation and compared with a frozen Week-4 rule-based baseline using Precision@K. On the evaluated population, the model achieved <b>Precision@20 = 0.75</b> versus <b>0.45</b> for the baseline, and <b>Precision@50 = 0.72</b> versus <b>0.62</b>. The resulting model scores rank pages for review, while transparent baseline signals provide reason context and proposed human-review actions.</p><div class="stats"><div><b>82,436</b><small>eligible observations</small></div><div><b>0.75</b><small>model Precision@20</small></div><div><b>+30 pp</b><small>observed P@20 improvement</small></div></div></div></section>
-<section><div class="kicker">02 · INTRODUCTION</div><h2>The decision</h2><div class="cols"><div><p>Content teams can have more pages to review than they can realistically inspect at once. The practical problem is therefore not simply whether a page is declining; it is <b>which pages should be reviewed first</b>.</p><p>This capstone frames the problem as ranking. The model produces a score for each eligible client-content pair, pages are ordered by that score, and Precision@20 and Precision@50 measure how concentrated the defined decline outcome is near the top of the queue.</p></div><aside class="callout"><label>DECISION SUPPORTED</label><b>Prioritize human review of content pages showing elevated risk of the defined future visibility-decline outcome.</b><small>This is decision support, not automatic content editing.</small></aside></div></section>
-<section><div class="kicker">03 · DATA</div><h2>Temporal setup and eligibility</h2><div class="timeline"><div><small>FEATURE WINDOW</small><b>Mar 03 → May 31</b><p>90 days of historical search/content signals</p></div><strong>→</strong><div><small>OUTCOME WINDOW</small><b>Jun 01 → Jun 30</b><p>future month used only for the label</p></div></div><div class="metrics"><div><small>FINAL POPULATION</small><b>82,436</b></div><div><small>DECLINING</small><b>41,575</b></div><div><small>NON-DELINING</small><b>40,861</b></div><div><small>DECLINE RATE</small><b>50.43%</b></div></div><p class="note">The label uses May 2–May 31 as the 30-day reference period and June 1–June 30 as the future outcome period. Pages with fewer than 100 May impressions are excluded because percentage-change labels become unstable at very small volumes.</p></section>
-<section id="methodology"><div class="kicker">04 · METHODOLOGY</div><h2>Historical signals → future outcome → ranked review</h2><div class="cards"><article><i>01</i><h3>Feature construction</h3><p>90-day aggregates include impressions, clicks, sessions, pageviews, users, engagement, active days, CTR, average position, content age, update recency, search volume, word count, content type and intent.</p></article><article><i>02</i><h3>Operational label</h3><p>A page is labeled declining when May impressions are at least 100 and May→June impression change is ≤ −40%.</p></article><article><i>03</i><h3>Baseline</h3><p>A frozen rule assigns points for stale content (+3), historical visibility (+2), and high search demand (+1), then ranks by the resulting score.</p></article><article><i>04</i><h3>Validation</h3><p>Five-fold GroupKFold is performed by client_hash_id. Clients do not overlap between train and test within a fold. OOF probabilities provide held-out scores for every observation.</p></article><article><i>05</i><h3>Leakage control</h3><p>June-derived outcome columns are excluded from X. Imputation, scaling and categorical encoding are fitted inside the model pipeline rather than globally.</p></article><article><i>06</i><h3>Decision metric</h3><p>Precision@20 and Precision@50 measure how many of the top-ranked pages are members of the defined future-decline class.</p></article></div><div class="equation"><div><small>ELIGIBILITY</small><b>May impressions ≥ 100</b></div><div><small>LABEL</small><b>May→June change ≤ −40%</b></div><div><small>RANKING</small><b>OOF model score ↓</b></div></div></section>
-<section id="results"><div class="kicker">05 · RESULTS</div><h2>Model vs. frozen baseline</h2><p class="intro">Both methods are evaluated on the same modeling population. The model produces a more concentrated ranking of the defined decline outcome near the head of the queue.</p><div class="resultstats"><div><small>PRECISION@20</small><b>0.75</b><span>baseline 0.45 · +0.30</span></div><div><small>PRECISION@50</small><b>0.72</b><span>baseline 0.62 · +0.10</span></div></div><div class="chart"><h3>Precision@K · selected review budgets</h3><div class="bar"><span>Baseline · K=20</span><em><i style="width:45%"></i></em><b>0.45</b></div><div class="bar"><span>Model · K=20</span><em><i class="model" style="width:75%"></i></em><b>0.75</b></div><div class="bar"><span>Baseline · K=50</span><em><i style="width:62%"></i></em><b>0.62</b></div><div class="bar"><span>Model · K=50</span><em><i class="model" style="width:72%"></i></em><b>0.72</b></div><p class="caption">Figure 1. Observed Precision@20 and Precision@50 for the frozen Week-4 baseline and Logistic Regression under the client-grouped evaluation design.</p></div><div class="interpret"><b>Interpretation.</b> At the smallest review budget shown, the model identifies a substantially denser set of future-decline observations than the baseline. At K=50, the advantage remains positive but is smaller.</div><table><thead><tr><th>Method</th><th>Precision@20</th><th>Precision@50</th></tr></thead><tbody><tr><td>Week-4 Baseline</td><td>0.45</td><td>0.62</td></tr><tr class="hi"><td>Logistic Regression</td><td>0.75</td><td>0.72</td></tr></tbody></table></section>
-<section><div class="kicker">06 · LIMITATIONS</div><h2>What this work cannot claim</h2><div class="limits"><div><b>Not Google's algorithm</b><p>The model learns associations with the defined GSC impression-decline outcome. It does not identify Google's ranking factors.</p></div><div><b>Not causal</b><p>A model score does not establish that changing a page will cause visibility to recover.</p></div><div><b>Not long-horizon validation</b><p>The experiment uses one future June outcome window. It is not a multi-period walk-forward study.</p></div><div><b>Not automatic action</b><p>The queue prioritizes human review. It does not authorize rewriting, publishing, deleting, merging, or pruning content.</p></div><div><b>Not universal performance</b><p>Reported Precision@K is specific to this dataset, population, label definition and validation design.</p></div></div></section>
-<section id="recommendations"><div class="kicker">07 · RANKED RECOMMENDATIONS</div><h2>From score to review action</h2><p class="intro">The model determines <b>order</b>; transparent baseline signals provide <b>reason context</b>. The resulting queue is a human-review workflow.</p><div class="playbook"><div><label>MODEL + BASELINE</label><b>REFRESH_REVIEW</b><p>Prioritize pages where the model ranks highly and the transparent baseline also identifies meaningful review signals.</p></div><div><label>MODEL ONLY</label><b>INVESTIGATE_REVIEW</b><p>Investigate when the model surfaces a page that the simple baseline does not strongly flag.</p></div><div><label>OUTSIDE REVIEW BUDGET</label><b>MONITOR</b><p>Keep lower-ranked observations in monitoring rather than forcing an intervention.</p></div></div><div class="queue"><header><span>RANK</span><span>CONTENT ID</span><span>SCORE</span><span>STATUS</span></header><div><b>#01</b><code>content_d8a9f27682068c84</code><strong>1.000</strong><span>MODEL_ONLY_TOP20</span></div><div><b>#02</b><code>content_fc0e11252376bb58</code><strong>1.000</strong><span>MODEL_ONLY_TOP20</span></div><div><b>#03</b><code>content_95400d53c15c4d85</code><strong>1.000</strong><span>MODEL_ONLY_TOP20</span></div><div><b>#04</b><code>content_7ddc483efdf93a34</code><strong>1.000</strong><span>MODEL_ONLY_TOP20</span></div><div><b>#05</b><code>content_f6a823f74db6b1dc</code><strong>1.000</strong><span>MODEL_ONLY_TOP20</span></div></div><p class="note">The example queue uses pseudonymous content identifiers and demonstrates the deployed output format.</p></section>
-<section><div class="kicker">08 · ARTIFACTS</div><h2>Paper evidence</h2><div class="artifacts"><div><small>TABLE 01</small><b>Population Summary</b><p>82,436 eligible client-content observations; 50.43% labeled declining.</p></div><div><small>TABLE 02</small><b>Model vs Baseline</b><p>Precision@20 and Precision@50 under the same evaluation population.</p></div><div><small>FIGURE 01</small><b>Precision@K</b><p>Comparison of model and frozen baseline at selected review budgets.</p></div><div><small>TABLE 03</small><b>Ranked Queue</b><p>Model score, baseline context, reason codes and review actions.</p></div></div></section>
-<section id="reproducibility"><div class="kicker">09 · REPRODUCIBILITY</div><h2>Trace the result</h2><div class="cols"><div><h3>Prediction boundary</h3><p><code>2026-05-31</code></p><h3>Feature window</h3><p><code>2026-03-03 → 2026-05-31</code></p><h3>Outcome window</h3><p><code>2026-06-01 → 2026-06-30</code></p><h3>Model</h3><p>Logistic Regression with fold-fitted preprocessing and five-fold GroupKFold by client.</p></div><div class="links"><a href="https://github.com/Om-codex/flyrank-ml-internship" target="_blank">Repository ↗</a><a href="https://github.com/Om-codex/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb" target="_blank">Capstone notebook ↗</a><p>Results are reproducible subject to access to the underlying internship dataset.</p></div></div></section>
-<section class="credit"><div class="kicker">10 · ACKNOWLEDGMENTS & DATA CREDIT</div><h2>Built on the FlyRank ML Internship dataset.</h2><p>Data credit is provided to acknowledge the source of the real-world internship dataset used for this analysis.</p><a class="flyrank" href="https://flyrank.ai/" target="_blank">FlyRank ↗</a></section></main><footer><span>FlyRank ML Internship · Search Intelligence Capstone</span><span>Decision-support analysis · Public-safe pseudonymous identifiers</span></footer></body></html>
+
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
+<section class="hero">
+
+  <div class="eyebrow">
+    FLYRANK ML INTERNSHIP · MACHINE LEARNING CAPSTONE
+  </div>
+
+  <h1>
+    Prioritizing Content Pages at Risk of Search-Visibility Decline
+  </h1>
+
+  <p class="hero-sub">
+    A leakage-controlled ranking approach for deciding which content
+    pages a human reviewer should inspect first.
+  </p>
+
+  <div class="hero-meta">
+
+    <span>
+      Refresh / Content Opportunity Scoring
+    </span>
+
+    <span>
+      90-day historical features
+    </span>
+
+    <span>
+      30-day future outcome
+    </span>
+
+    <span>
+      Client-grouped validation
+    </span>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ABSTRACT
+========================================================= -->
+
+<section class="section" id="abstract">
+
+  <div class="section-kicker">
+    01 · ABSTRACT
+  </div>
+
+  <h2>
+    From noisy search data to a review queue
+  </h2>
+
+  <div class="abstract-grid">
+
+    <p class="lead">
+
+      This project asks which content pages should be prioritized
+      for human review when the goal is to identify pages that
+      subsequently experience a defined decline in search visibility.
+
+      A 90-day historical feature window was constructed from
+      March 3 through May 31, 2026, and a future June outcome
+      window was used to define an operational decline label from
+      Google Search Console impressions.
+
+      Logistic Regression was evaluated using five-fold client-grouped
+      cross-validation and compared with a frozen Week-4 rule-based
+      baseline using Precision@K.
+
+      On the evaluated population, the model achieved
+      <strong>Precision@20 = 0.75</strong> versus
+      <strong>0.45</strong> for the baseline, and
+      <strong>Precision@50 = 0.72</strong> versus
+      <strong>0.62</strong>.
+
+      The resulting model scores are used to rank pages for review,
+      while transparent baseline signals supply reason context and
+      proposed human-review actions.
+
+    </p>
+
+
+    <div class="stat-stack">
+
+      <div class="stat">
+        <strong>82,436</strong>
+        <span>eligible client-content observations</span>
+      </div>
+
+      <div class="stat">
+        <strong>0.75</strong>
+        <span>model Precision@20</span>
+      </div>
+
+      <div class="stat">
+        <strong>0.72</strong>
+        <span>model Precision@50</span>
+      </div>
+
+      <div class="stat">
+        <strong>+30 pp</strong>
+        <span>observed Precision@20 improvement</span>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     INTRODUCTION
+========================================================= -->
+
+<section class="section" id="introduction">
+
+  <div class="section-kicker">
+    02 · INTRODUCTION / PROBLEM STATEMENT
+  </div>
+
+  <h2>
+    The decision
+  </h2>
+
+  <div class="two-col">
+
+    <div>
+
+      <p>
+        Content teams can have more pages to review than they can
+        realistically inspect at once. The practical problem is
+        therefore not simply whether a page is declining; it is
+        <strong>which pages should be reviewed first</strong>.
+      </p>
+
+      <p>
+        This capstone frames the problem as a ranking task.
+        The model produces a score for each eligible client-content
+        pair, pages are ordered by that score, and Precision@20 and
+        Precision@50 measure how concentrated the defined decline
+        outcome is near the top of the queue.
+      </p>
+
+      <p>
+        The objective is not to automate editorial decisions.
+        The objective is to make a large content inventory easier
+        to prioritize for human investigation.
+      </p>
+
+    </div>
+
+
+    <aside class="callout">
+
+      <span class="callout-label">
+        DECISION SUPPORTED
+      </span>
+
+      <strong>
+        Prioritize human review of content pages showing elevated
+        risk of the defined future visibility-decline outcome.
+      </strong>
+
+      <small>
+        The ranking is decision support, not an automatic content
+        editing or publishing system.
+      </small>
+
+    </aside>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     DATA
+========================================================= -->
+
+<section class="section" id="data">
+
+  <div class="section-kicker">
+    03 · DATA
+  </div>
+
+  <h2>
+    Historical signals → future outcome
+  </h2>
+
+
+  <div class="timeline">
+
+    <div class="time-card">
+
+      <span>
+        FEATURE WINDOW
+      </span>
+
+      <strong>
+        Mar 03 → May 31
+      </strong>
+
+      <small>
+        90 days of historical search, engagement and
+        content signals.
+      </small>
+
+    </div>
+
+
+    <div class="arrow">
+      →
+    </div>
+
+
+    <div class="time-card outcome">
+
+      <span>
+        OUTCOME WINDOW
+      </span>
+
+      <strong>
+        Jun 01 → Jun 30
+      </strong>
+
+      <small>
+        Future month used only to construct the outcome label.
+      </small>
+
+    </div>
+
+  </div>
+
+
+  <div class="metrics-grid">
+
+    <div>
+      <span>FINAL POPULATION</span>
+      <strong>82,436</strong>
+    </div>
+
+    <div>
+      <span>DECLINING</span>
+      <strong>41,575</strong>
+    </div>
+
+    <div>
+      <span>NON-DECLINING</span>
+      <strong>40,861</strong>
+    </div>
+
+    <div>
+      <span>DECLINE RATE</span>
+      <strong>50.43%</strong>
+    </div>
+
+  </div>
+
+
+  <p class="note">
+
+    The outcome label compares May and June Google Search Console
+    impressions. Pages with fewer than 100 May impressions were
+    excluded from the modeling population because percentage
+    changes at very low impression volumes can be unstable.
+
+  </p>
+
+</section>
+
+
+
+<!-- =========================================================
+     METHODOLOGY
+========================================================= -->
+
+<section class="section" id="methodology">
+
+  <div class="section-kicker">
+    04 · METHODOLOGY
+  </div>
+
+  <h2>
+    Historical signals → label → validation → ranked review
+  </h2>
+
+
+  <div class="method-grid">
+
+
+    <article class="method-card">
+
+      <span>01</span>
+
+      <h3>
+        Feature construction
+      </h3>
+
+      <p>
+        A 90-day historical feature table was constructed from
+        search and content signals including impressions, clicks,
+        sessions, pageviews, users, engagement, active days,
+        CTR, average position, content age, update recency,
+        search volume, word count, content type and intent.
+      </p>
+
+    </article>
+
+
+    <article class="method-card">
+
+      <span>02</span>
+
+      <h3>
+        Operational label
+      </h3>
+
+      <p>
+        A page is labeled declining when May impressions are at
+        least 100 and the May-to-June impression change is
+        less than or equal to −40%.
+      </p>
+
+    </article>
+
+
+    <article class="method-card">
+
+      <span>03</span>
+
+      <h3>
+        Frozen baseline
+      </h3>
+
+      <p>
+        The Week-4 baseline assigns points for stale content,
+        historical visibility and high search demand.
+        The resulting baseline score is used as the rule-based
+        ranking reference.
+      </p>
+
+    </article>
+
+
+    <article class="method-card">
+
+      <span>04</span>
+
+      <h3>
+        Grouped validation
+      </h3>
+
+      <p>
+        Five-fold GroupKFold validation was performed using
+        client_hash_id as the grouping variable. Clients do not
+        overlap between training and test observations within
+        a fold.
+      </p>
+
+    </article>
+
+
+    <article class="method-card">
+
+      <span>05</span>
+
+      <h3>
+        Leakage control
+      </h3>
+
+      <p>
+        June-derived outcome information is excluded from model
+        features. Preprocessing is fitted within each training
+        fold so information from held-out clients does not enter
+        the fitted preprocessing stage.
+      </p>
+
+    </article>
+
+
+    <article class="method-card">
+
+      <span>06</span>
+
+      <h3>
+        Ranking metric
+      </h3>
+
+      <p>
+        Precision@20 and Precision@50 measure how many of the
+        highest-ranked pages belong to the defined future-decline
+        class.
+      </p>
+
+    </article>
+
+
+  </div>
+
+
+  <div class="equation">
+
+    <div>
+
+      <span>
+        ELIGIBILITY
+      </span>
+
+      <b>
+        May impressions ≥ 100
+      </b>
+
+    </div>
+
+
+    <div>
+
+      <span>
+        LABEL
+      </span>
+
+      <b>
+        May → June change ≤ −40%
+      </b>
+
+    </div>
+
+
+    <div>
+
+      <span>
+        RANKING
+      </span>
+
+      <b>
+        Model score ↓
+      </b>
+
+    </div>
+
+  </div>
+
+
+  <div class="interpretation">
+
+    <strong>
+      Model and baseline have different jobs.
+    </strong>
+
+    The model determines the ranking order.
+    The transparent baseline provides human-readable
+    context for why a page may deserve review.
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     RESULTS
+========================================================= -->
+
+<section class="section" id="results">
+
+  <div class="section-kicker">
+    05 · RESULTS
+  </div>
+
+  <h2>
+    Model vs. frozen baseline
+  </h2>
+
+  <p class="section-intro">
+
+    Both methods are evaluated on the same eligible population.
+    The model produces a more concentrated set of labeled
+    declining pages near the top of the ranking.
+
+  </p>
+
+
+  <div class="result-grid">
+
+
+    <div class="result-card">
+
+      <span>
+        PRECISION@20
+      </span>
+
+      <div class="big">
+        0.75
+      </div>
+
+      <small>
+        baseline: 0.45 · +0.30 absolute
+      </small>
+
+    </div>
+
+
+    <div class="result-card">
+
+      <span>
+        PRECISION@50
+      </span>
+
+      <div class="big">
+        0.72
+      </div>
+
+      <small>
+        baseline: 0.62 · +0.10 absolute
+      </small>
+
+    </div>
+
+
+  </div>
+
+
+  <div class="chart-card">
+
+    <div class="chart-title">
+      Precision@K · selected review budgets
+    </div>
+
+
+    <div class="bars">
+
+
+      <div class="bar-row">
+
+        <span>
+          Baseline · K=20
+        </span>
+
+        <div class="track">
+          <i style="width:45%"></i>
+        </div>
+
+        <b>
+          0.45
+        </b>
+
+      </div>
+
+
+      <div class="bar-row">
+
+        <span>
+          Model · K=20
+        </span>
+
+        <div class="track">
+          <i
+            class="model"
+            style="width:75%"
+          ></i>
+        </div>
+
+        <b>
+          0.75
+        </b>
+
+      </div>
+
+
+      <div class="bar-row">
+
+        <span>
+          Baseline · K=50
+        </span>
+
+        <div class="track">
+          <i style="width:62%"></i>
+        </div>
+
+        <b>
+          0.62
+        </b>
+
+      </div>
+
+
+      <div class="bar-row">
+
+        <span>
+          Model · K=50
+        </span>
+
+        <div class="track">
+          <i
+            class="model"
+            style="width:72%"
+          ></i>
+        </div>
+
+        <b>
+          0.72
+        </b>
+
+      </div>
+
+
+    </div>
+
+
+    <p class="caption">
+
+      Figure 1. Precision@20 and Precision@50 for the frozen
+      Week-4 baseline and Logistic Regression under the
+      client-grouped evaluation design.
+
+    </p>
+
+  </div>
+
+
+  <div class="interpretation">
+
+    <strong>
+      Interpretation.
+    </strong>
+
+    At the smallest review budget shown, the model identifies
+    a substantially denser set of future-decline observations
+    than the baseline. The advantage remains positive at K=50,
+    although it is smaller.
+
+  </div>
+
+
+  <div class="results-table-wrap">
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Method</th>
+          <th>Precision@20</th>
+          <th>Precision@50</th>
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <tr>
+          <td>Week-4 Baseline</td>
+          <td>0.45</td>
+          <td>0.62</td>
+        </tr>
+
+        <tr class="highlight">
+          <td>Logistic Regression</td>
+          <td>0.75</td>
+          <td>0.72</td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     LIMITATIONS
+========================================================= -->
+
+<section class="section" id="limitations">
+
+  <div class="section-kicker">
+    06 · LIMITATIONS & HONEST FRAMING
+  </div>
+
+  <h2>
+    What this work cannot claim
+  </h2>
+
+
+  <div class="limits">
+
+
+    <div>
+
+      <b>
+        Not Google's algorithm
+      </b>
+
+      <p>
+        The model learns associations with the defined GSC
+        impression-decline outcome. It does not identify
+        Google's ranking factors or reproduce Google's ranking
+        system.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <b>
+        Not causal
+      </b>
+
+      <p>
+        A high model score does not establish that changing a
+        page will cause search visibility to recover.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <b>
+        Not long-horizon validation
+      </b>
+
+      <p>
+        The experiment uses the specified June future outcome
+        window. It is not a multi-period walk-forward study
+        across many future months.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <b>
+        Not automatic action
+      </b>
+
+      <p>
+        The queue prioritizes human review. It does not
+        automatically authorize rewriting, publishing,
+        deleting, merging or pruning content.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <b>
+        Not universal performance
+      </b>
+
+      <p>
+        The reported Precision@K values are observed under
+        this dataset, population, label definition and
+        validation design.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <b>
+        Not guaranteed traffic recovery
+      </b>
+
+      <p>
+        The analysis does not estimate causal traffic recovery
+        from any proposed editorial action. Such claims would
+        require controlled experimentation.
+      </p>
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ACTION PLAYBOOK
+========================================================= -->
+
+<section class="section" id="recommendations">
+
+  <div class="section-kicker">
+    07 · RANKED RECOMMENDATIONS
+  </div>
+
+  <h2>
+    From model score to human action
+  </h2>
+
+
+  <p class="section-intro">
+
+    The model determines <strong>order</strong>.
+    The transparent baseline supplies <strong>reason context</strong>.
+    The resulting queue is a human-review workflow rather than
+    an automatic content optimizer.
+
+  </p>
+
+
+  <!-- PLAYBOOK TYPES -->
+
+  <div class="playbook">
+
+
+    <div>
+
+      <span class="pill primary">
+        REVIEW
+      </span>
+
+      <strong>
+        REVIEW BEFORE REVERT
+      </strong>
+
+      <p>
+        Inspect the relevant visibility signal, check search
+        intent and recent changes, then form a hypothesis before
+        making any content change.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <span class="pill">
+        VERIFY
+      </span>
+
+      <strong>
+        VERIFY THEN REVIEW
+      </strong>
+
+      <p>
+        Large movements should first be checked for measurement,
+        tracking, campaign or other unusual effects before
+        editorial intervention.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <span class="pill muted">
+        MONITOR
+      </span>
+
+      <strong>
+        MONITOR ONLY
+      </strong>
+
+      <p>
+        Pages showing durable positive movement should not be
+        changed simply because they receive a high model score.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <span class="pill">
+        INVESTIGATE
+      </span>
+
+      <strong>
+        INVESTIGATE QUIET RISK
+      </strong>
+
+      <p>
+        When the model ranks a page highly but the transparent
+        baseline does not provide a strong explanation, send
+        the page to human investigation rather than assuming
+        the model explains the cause.
+      </p>
+
+    </div>
+
+
+  </div>
+
+
+
+  <!-- IMPORTANT PLAYBOOK NOTE -->
+
+  <div class="interpretation">
+
+    <strong>
+      Queue policy.
+    </strong>
+
+    A model score tells the reviewer <em>where to look</em>;
+    it does not tell the reviewer <em>what definitely caused
+    the decline</em>. Every recommendation remains subject to
+    human review before an editorial decision.
+
+  </div>
+
+
+
+  <!-- =====================================================
+       FINAL TOP 20 TABLE
+  ====================================================== -->
+
+  <div class="queue-section">
+
+    <div class="queue-section-header">
+
+      <div>
+
+        <div class="queue-kicker">
+          FINAL RANKED OUTPUT
+        </div>
+
+        <h3>
+          Top-20 Action-Playbook Queue
+        </h3>
+
+      </div>
+
+
+      <div class="queue-badge">
+        20 highest model scores
+      </div>
+
+    </div>
+
+
+    <p class="queue-description">
+
+      The table below is the final Top-20 ranked output from the
+      modeling workflow. Pages are ordered by model score.
+      The June outcome is shown only as an evaluation field;
+      it is not used as an input feature.
+
+    </p>
+
+
+    <!-- Horizontal scrolling container -->
+
+    <div class="queue-scroll">
+
+      <table class="queue-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Rank</th>
+            <th>Content ID</th>
+            <th>Model Score</th>
+            <th>Declining</th>
+            <th>Baseline Score</th>
+            <th>Baseline Rank</th>
+            <th>Model / Baseline</th>
+            <th>Baseline Reason</th>
+            <th>Suggested Action</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+          <tr>
+
+            <td class="rank">01</td>
+
+            <td>
+              <code>content_d8a9f27682068c84</code>
+            </td>
+
+            <td class="score">1.000000</td>
+
+            <td class="label-no">NO</td>
+
+            <td>2</td>
+
+            <td>63609</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">02</td>
+
+            <td>
+              <code>content_fc0e11252376bb58</code>
+            </td>
+
+            <td class="score">1.000000</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>73668</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">03</td>
+
+            <td>
+              <code>content_95400d53c15c4d85</code>
+            </td>
+
+            <td class="score">1.000000</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>44595</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">04</td>
+
+            <td>
+              <code>content_7ddc483efdf93a34</code>
+            </td>
+
+            <td class="score">1.000000</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>37892</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">05</td>
+
+            <td>
+              <code>content_f6a823f74db6b1dc</code>
+            </td>
+
+            <td class="score">1.000000</td>
+
+            <td class="label-no">NO</td>
+
+            <td>2</td>
+
+            <td>72124</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">06</td>
+
+            <td>
+              <code>content_36e53e9c707674fc</code>
+            </td>
+
+            <td class="score">0.999994</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>18110</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">07</td>
+
+            <td>
+              <code>content_6982fdcd6a6b28f8</code>
+            </td>
+
+            <td class="score">0.999952</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>32273</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">08</td>
+
+            <td>
+              <code>content_21e283d10df457c7</code>
+            </td>
+
+            <td class="score">0.999654</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>12124</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">09</td>
+
+            <td>
+              <code>content_b51957d7f4abe47e</code>
+            </td>
+
+            <td class="score">0.999647</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>53696</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">10</td>
+
+            <td>
+              <code>content_5460e854602a47</code>
+            </td>
+
+            <td class="score">0.997321</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>26296</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">11</td>
+
+            <td>
+              <code>content_5ce8566220ed7326</code>
+            </td>
+
+            <td class="score">0.995150</td>
+
+            <td class="label-no">NO</td>
+
+            <td>2</td>
+
+            <td>28721</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">12</td>
+
+            <td>
+              <code>content_436860cd6a71be8a</code>
+            </td>
+
+            <td class="score">0.993273</td>
+
+            <td class="label-no">NO</td>
+
+            <td>2</td>
+
+            <td>21598</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">13</td>
+
+            <td>
+              <code>content_f7c9fcc26f6e23c1</code>
+            </td>
+
+            <td class="score">0.993059</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>72428</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">14</td>
+
+            <td>
+              <code>content_fdf510facb7e51ff</code>
+            </td>
+
+            <td class="score">0.991800</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>74190</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">15</td>
+
+            <td>
+              <code>content_ef712de6bc6989a1</code>
+            </td>
+
+            <td class="score">0.990973</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>70088</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">16</td>
+
+            <td>
+              <code>content_6486239516a186d7</code>
+            </td>
+
+            <td class="score">0.990971</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>30925</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">17</td>
+
+            <td>
+              <code>content_99cc4061cbe916a2</code>
+            </td>
+
+            <td class="score">0.990829</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>45916</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">18</td>
+
+            <td>
+              <code>content_4628abb0af4acd5c</code>
+            </td>
+
+            <td class="score">0.990709</td>
+
+            <td class="label-no">NO</td>
+
+            <td>2</td>
+
+            <td>22400</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">19</td>
+
+            <td>
+              <code>content_d266146f0dcb4778</code>
+            </td>
+
+            <td class="score">0.990586</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>61889</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td class="rank">20</td>
+
+            <td>
+              <code>content_68d4a108fef4f3fd</code>
+            </td>
+
+            <td class="score">0.990055</td>
+
+            <td class="label-yes">YES</td>
+
+            <td>2</td>
+
+            <td>32068</td>
+
+            <td>
+              <span class="status model-only">
+                MODEL_ONLY_TOP20
+              </span>
+            </td>
+
+            <td>
+              LOW_PRIORITY
+            </td>
+
+            <td>
+              INVESTIGATE_QUIET_RISK
+            </td>
+
+          </tr>
+
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <p class="note">
+
+      <strong>Reading the queue:</strong>
+      The ranking is generated from model scores. The
+      <code>is_declining</code> column is an evaluation label
+      available after the June outcome window and is not an
+      input to the prediction. Because the displayed Top-20
+      observations are model-ranked but not strongly surfaced
+      by the current baseline reason logic, they are treated
+      as investigation candidates rather than automatic
+      refresh recommendations.
+
+    </p>
+
+  </div>
+
+
+
+  <!-- ACTION RULE -->
+
+  <div class="action-rule">
+
+    <div class="action-rule-title">
+      HUMAN REVIEW RULE
+    </div>
+
+    <div class="action-rule-grid">
+
+      <div>
+        <strong>
+          01
+        </strong>
+
+        <span>
+          Inspect the page and its historical signals.
+        </span>
+      </div>
+
+
+      <div>
+        <strong>
+          02
+        </strong>
+
+        <span>
+          Check search intent and recent content changes.
+        </span>
+      </div>
+
+
+      <div>
+        <strong>
+          03
+        </strong>
+
+        <span>
+          Form a hypothesis before changing content.
+        </span>
+      </div>
+
+
+      <div>
+        <strong>
+          04
+        </strong>
+
+        <span>
+          Use controlled measurement before claiming impact.
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+
+
+<!-- =========================================================
+     REPRODUCIBILITY
+========================================================= -->
+
+<section class="section" id="reproducibility">
+
+  <div class="section-kicker">
+    08 · REPRODUCIBILITY
+  </div>
+
+  <h2>
+    Trace the result
+  </h2>
+
+
+  <div class="repro-grid">
+
+
+    <div>
+
+      <h3>
+        Prediction boundary
+      </h3>
+
+      <p>
+        <code>2026-05-31</code>
+      </p>
+
+
+      <h3>
+        Feature window
+      </h3>
+
+      <p>
+        <code>
+          2026-03-03 → 2026-05-31
+        </code>
+      </p>
+
+
+      <h3>
+        Outcome window
+      </h3>
+
+      <p>
+        <code>
+          2026-06-01 → 2026-06-30
+        </code>
+      </p>
+
+
+      <h3>
+        Model
+      </h3>
+
+      <p>
+        Logistic Regression with fold-fitted preprocessing
+        and five-fold GroupKFold by client.
+      </p>
+
+    </div>
+
+
+    <div class="link-card">
+
+      <a
+        href="https://github.com/Om-codex/flyrank-ml-internship"
+        target="_blank"
+        rel="noopener"
+      >
+        Repository ↗
+      </a>
+
+
+      <a
+        href="https://github.com/Om-codex/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb"
+        target="_blank"
+        rel="noopener"
+      >
+        Capstone notebook ↗
+      </a>
+
+
+      <p>
+
+        The repository contains the assignment notebooks and
+        capstone implementation required for reproducibility,
+        subject to access to the underlying internship dataset.
+
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ACKNOWLEDGMENTS
+========================================================= -->
+
+<section class="section credit">
+
+  <div class="section-kicker">
+    ACKNOWLEDGMENTS & DATA CREDIT
+  </div>
+
+
+  <h2>
+    Built on the FlyRank ML Internship dataset.
+  </h2>
+
+
+  <p>
+
+    Data credit is provided to acknowledge the source of the
+    real-world internship dataset used for this analysis.
+
+  </p>
+
+
+  <a
+    class="flyrank"
+    href="https://flyrank.ai/"
+    target="_blank"
+    rel="noopener"
+  >
+    FlyRank ↗
+  </a>
+
+</section>
+
+
+</main>
+
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer>
+
+  <span>
+    FlyRank ML Internship · Search Intelligence Capstone
+  </span>
+
+  <span>
+    Decision-support analysis · Public-safe pseudonymous identifiers
+  </span>
+
+</footer>
+
+
+</body>
+</html>
